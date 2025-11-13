@@ -1,0 +1,696 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Brief.Bridge - Walmart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --primary:#0071CE;      /* azul Walmart */
+      --tabs:#FFC220;         /* amarillo Walmart */
+      --ink:#333333;
+      --surface:#FDFDFD;
+      --radius:16px;
+      --wm-yellow: #FFC220;
+      --wm-blue: #0071CE;
+      --wm-dark-blue: #004C97;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font:16px/1.5 Inter,system-ui,Segoe UI,Roboto,sans-serif;background:var(--surface);color:var(--ink)}
+
+    /* ===== Header ===== */
+    header{
+      display:flex;align-items:center;gap:12px;
+      padding:16px 24px;border-bottom:3px solid var(--wm-yellow);background:#fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.05)
+    }
+    .brand{font-weight:900;font-size:28px;letter-spacing:.2px;color:var(--wm-blue);transition:color .2s}
+    .brand:hover{color:var(--wm-dark-blue)}
+
+    .brand-logo {
+      height: 45px; width: auto; object-fit: contain; display: block; margin-left: auto;
+    }
+    .nav-left { display: flex; align-items: center; gap: 14px; }
+
+    /* ===== Tabs ===== */
+    .tabs{ display:flex; gap:8px; padding:10px 24px; background:var(--tabs); border-bottom:1px solid #E6A800; align-items:center; justify-content:flex-start }
+    .tabs-left{ display:flex; gap:8px; }
+    .tab{ padding:10px 16px; border-radius:999px; border:1px solid rgba(51,51,51,.2); background:transparent; cursor:pointer; font-weight:700; color:#333; transition:all .2s }
+    .tab.active{ background:var(--wm-blue); color:#fff; border-color:var(--wm-blue); }
+    .tab:hover:not(.active){ background:rgba(0,113,206,.1); }
+
+    /* ===== Layout ===== */
+    .container{ display:grid; grid-template-columns:0.8fr 1.2fr; gap:24px; padding:20px 24px 32px }
+    .card{ background:#fff; border:1px solid #E5E5E5; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,.1); padding:16px; transition:box-shadow .2s }
+    .card:hover{ box-shadow:0 4px 12px rgba(0,0,0,.08) }
+    .card.audience-card{ grid-column:1 / -1; }
+    .section-title{ font-weight:800; margin:0 0 12px; color:var(--wm-blue) }
+
+    /* Upload centrado, a media anchura */
+    .upload{ width:50%; min-width:280px; max-width:520px; margin:0 auto; border:2px dashed var(--wm-blue);
+      border-radius:var(--radius); padding:26px; text-align:center; background:#F0F8FF; transition:all .2s }
+    .audience-card .upload{ width:100%; max-width:none; }
+    .upload:hover{ border-color:var(--wm-dark-blue); background:#E6F2FF }
+    input[type="file"]{max-width:100%;padding:8px;cursor:pointer}
+    input[type="file"]::file-selector-button{
+      background:var(--wm-blue);color:#fff;border:none;padding:8px 16px;
+      border-radius:6px;font-weight:600;cursor:pointer;margin-right:12px;
+      transition:all .2s
+    }
+    input[type="file"]::file-selector-button:hover{
+      background:var(--wm-dark-blue);transform:translateY(-1px)
+    }
+
+    .audience-files{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+    .audience-file{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 14px; border:1px dashed rgba(0,113,206,.3); border-radius:12px; background:#F8FBFF; }
+    .audience-file .meta{ display:flex; flex-direction:column; gap:4px; text-align:left; }
+    .audience-file .name{ font-weight:600; color:var(--wm-blue); }
+    .audience-file .details{ color:#4d4d4d; font-size:13px; }
+    .empty-state{ text-align:center; color:#666; font-size:14px; padding:12px 0; border:1px dashed #d0d0d0; border-radius:8px; background:#fff; }
+    .btn-sm{ padding:6px 12px; font-size:13px; border-radius:4px; }
+
+    .btn{ background:var(--wm-blue); color:#fff; border:none; padding:12px 20px; border-radius:6px; font-weight:600; cursor:pointer; transition:all .2s; font-size:15px }
+    .btn:hover{ background:var(--wm-dark-blue); transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,113,206,.3) }
+    .btn.secondary{ background:#fff; color:var(--wm-blue); border:1px solid var(--wm-blue) }
+    .btn.secondary:hover{ background:rgba(0,113,206,.1); border-color:var(--wm-blue); color:var(--wm-blue) }
+    .rowCenter{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap }
+
+    #result,#resultIdeas{
+      height:60vh; overflow:auto; border:1px solid #E5E5E5; border-radius:6px; padding:16px; background:#FAFAFA; white-space:pre-wrap; text-align:left;
+      box-shadow:inset 0 1px 3px rgba(0,0,0,.05)
+    }
+    #result h1, #result h2, #result h3, #result p, #result ul, #result ol, #result li,
+    #resultIdeas h1, #resultIdeas h2, #resultIdeas h3, #resultIdeas p, #resultIdeas ul, #resultIdeas ol, #resultIdeas li {
+      margin: 0 0 .6rem 0; padding: 0;
+    }
+    #result h2, #resultIdeas h2 { color:var(--wm-blue); border-bottom:2px solid var(--wm-yellow); padding-bottom:4px; margin-bottom:8px }
+    #result h3, #resultIdeas h3 { color:var(--wm-dark-blue) }
+    #result ul, #result ol, #resultIdeas ul, #resultIdeas ol { list-style-position: inside; padding-left: 0; margin-left: 0; }
+    #result li, #resultIdeas li { margin-left: 0 }
+    #result strong, #resultIdeas strong { font-weight:700; color:var(--wm-dark-blue) }
+    #result em, #resultIdeas em { font-style:italic; color:#555 }
+
+    textarea{ width:100%; min-height:110px; border:1px solid #ddd; border-radius:6px; padding:10px; font:16px/1.5 Inter,system-ui,Segoe UI,Roboto,sans-serif; transition:border .2s }
+    textarea:focus{ outline:none; border-color:var(--wm-blue); box-shadow:0 0 0 3px rgba(0,113,206,.1) }
+    .hidden{display:none}
+    .hint{ color:#666; font-size:14px }
+    
+    /* Select dropdown */
+    select{ font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif }
+    select:focus{ outline:none; border-color:var(--wm-blue)!important; box-shadow:0 0 0 3px rgba(0,113,206,.1) }
+    select:hover{ border-color:var(--wm-dark-blue) }
+
+    /* Chips amarillos Walmart */
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px }
+    .chip{ background:var(--wm-yellow); color:#333; border:1px solid #E6A800; border-radius:6px; padding:8px 12px; font-weight:700; cursor:pointer; transition:all .2s }
+    .chip:hover{ background:#E6A800; transform:translateY(-1px); box-shadow:0 2px 8px rgba(0,113,206,.15) }
+    .chip.active{ background:var(--wm-blue); color:#fff; border-color:var(--wm-blue); box-shadow:0 2px 12px rgba(0,113,206,.3) }
+
+    /* Chat */
+    .chatWrap{ border:1px solid #eee; border-radius:12px; padding:10px; background:#fff }
+    .chatLog{ height:220px; overflow:auto; font-size:14px }
+    .msg{ margin:6px 0; padding:8px 10px; border-radius:10px; max-width:100%; white-space:pre-wrap }
+    .user{ background:#E8F4FF; color:#1A3A52; align-self:flex-end; border:1px solid #B8DEFF }
+    .assistant{ background:#FFF8E1; border:1px solid #FFC220 }
+    .chatInput{ display:flex; gap:8px; margin-top:8px }
+    .chatInput input{ flex:1; border:1px solid #ddd; border-radius:6px; padding:10px; transition:border .2s }
+    .chatInput input:focus{ outline:none; border-color:var(--wm-blue); box-shadow:0 0 0 3px rgba(0,113,206,.1) }
+
+    /* Igualar altura del textarea estrategiaFinal */
+    #estrategiaFinal{ height:60vh }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header>
+    <div class="brand">Brief.Bridge</div>
+    <img class="brand-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Walmart_logo.svg/2560px-Walmart_logo.svg.png" alt="Walmart"/>
+  </header>
+
+  <!-- ===== Tabs ===== -->
+  <div class="tabs">
+    <div class="tabs-left">
+      <div class="tab active" id="tab-estrategia" onclick="setTab('estrategia')">1. Estrategia</div>
+      <div class="tab" id="tab-ideas" onclick="setTab('ideas')">2. Ideas Creativas</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: ESTRATEGIA ===== -->
+  <div id="view-estrategia" class="container">
+    <section class="card">
+      <h3 class="section-title">1) Sube tu brief</h3>
+      <div class="upload">
+        <input id="file" type="file" />
+        <div class="hint" id="fileName" style="margin-top:8px;min-height:18px"></div>
+      </div>
+      <div class="rowCenter" style="margin-top:14px">
+        <button class="btn" onclick="generar()">Generar estrategia</button>
+        <button class="btn secondary" onclick="limpiar()">Limpiar</button>
+      </div>
+
+      <h3 class="section-title" style="margin-top:18px">2) Ajustes por sección</h3>
+      <div class="hint">Elige un tema para modificar:</div>
+      <div class="chips" id="chips"></div>
+
+      <div class="chatWrap" style="margin-top:10px">
+        <div class="hint" id="chatTitle">¿Qué te gustaría modificar de…?</div>
+        <div class="chatLog" id="chatLog"></div>
+        <div class="chatInput">
+          <input id="chatText" placeholder="Escribe tu mensaje…" />
+          <button class="btn" onclick="sendChat()">Enviar</button>
+          <button class="btn secondary" onclick="actualizarBrief()">Actualizar brief</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card audience-card">
+      <h3 class="section-title">Audience Core</h3>
+      <p class="hint">Adjunta los archivos base que describen a tu audiencia objetivo (datasets, estudios, decks, etc.). Puedes cargar varios archivos a la vez.</p>
+      <div class="upload">
+        <input id="audience-core-files" type="file" multiple />
+        <div class="hint" id="audienceCoreFileHint" style="margin-top:8px;min-height:18px">No hay archivos seleccionados.</div>
+      </div>
+      <div class="audience-files" id="audienceCoreFileList"></div>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title">Estrategia (resultado)</h3>
+      <div id="result">Aquí aparecerá la estrategia generada…</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn" onclick="llevarAEstrategiaFinal()">Usar como "Estrategia final"</button>
+        <button class="btn secondary" onclick="downloadPanelAsPDF('result','Estrategia - Brief.Bridge')">Descargar PDF</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== TAB: IDEAS CREATIVAS ===== -->
+  <div id="view-ideas" class="container hidden">
+    <section class="card">
+      <h3 class="section-title">Estrategia final (insumo)</h3>
+      <textarea id="estrategiaFinal" placeholder="Pega aquí la estrategia final o usa la última generada."></textarea>
+      <div class="rowCenter" style="margin-top:12px">
+        <button class="btn secondary" onclick="pegarUltimaEstrategia()">Usar última generada</button>
+      </div>
+
+      <h3 class="section-title" style="margin-top:18px">Seleccionar pilar de contenido</h3>
+      <div class="hint">Elige un pilar para generar ideas creativas:</div>
+      <div class="chips" id="chipsPilares"></div>
+
+      <h3 class="section-title" style="margin-top:18px">Refinar ideas del pilar</h3>
+      <div class="hint" id="chatPilarHint">Conversa para modificar y refinar las ideas creativas</div>
+
+      <div class="chatWrap" style="margin-top:10px">
+        <div class="chatLog" id="chatLogPilar"></div>
+        <div class="chatInput">
+          <input id="chatTextPilar" placeholder="Sugiere cambios, nuevas ideas o ajustes…" />
+          <button class="btn" onclick="sendPilarChat()">Enviar</button>
+          <button class="btn secondary" onclick="actualizarIdeasPilar()">Actualizar ideas</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title">Ideas Creativas (resultado)</h3>
+      <div id="resultIdeas">Selecciona un pilar de contenido y genera ideas creativas…</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn secondary" onclick="downloadPanelAsPDF('resultIdeas','Ideas Creativas - Brief.Bridge')">Descargar PDF</button>
+      </div>
+    </section>
+  </div>
+
+<script>
+/* ================= App logic (frontend) ================= */
+const SECTIONS = [
+  "Campaña (idea central y ejecución)",
+  "Objetivo",
+  "Insight central",
+  "Audiencia",
+  "Pilares de marca",
+  "Entendiendo los pilares",
+  "Qué se puede hacer",
+  "Qué no se puede hacer",
+  "Ecosistema de social",
+  "Tipos de contenido",
+  "Deliverables sugeridos",
+  "Fases de la campaña"
+];
+
+let fileDataUrl = null;
+let audienceCoreFiles = [];
+let lastBrief = '';
+let selectedSection = null;
+let chats = {}; // {section: [{role:'user'|'assistant', content:'...'}]}
+
+/* ===== Estado pilares (Tab 2) ===== */
+let selectedPilar = null;
+let lastPilarIdeas = '';
+let pilarChats = {}; // { pilarName: [{role, content}] }
+let extractedPilares = []; // Pilares extraídos de la estrategia
+
+/* Chips (Tab 1) */
+function renderChips(){
+  const c = document.getElementById('chips'); c.innerHTML = '';
+  SECTIONS.forEach(s=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (selectedSection===s?' active':'');
+    b.textContent = s;
+    b.onclick = ()=>selectSection(s);
+    c.appendChild(b);
+  });
+}
+function selectSection(s){
+  selectedSection = s;
+  if(!chats[s]) chats[s]=[];
+  document.getElementById('chatLog').innerHTML = renderChat(chats[s]);
+  document.getElementById('chatTitle').textContent = "¿Qué te gustaría modificar de: " + s + "?";
+  renderChips();
+}
+renderChips();
+
+/* Extraer pilares de la estrategia */
+function extractPilaresFromBrief(briefText){
+  if(!briefText) return [];
+  const pilares = [];
+  const lines = briefText.split('\n');
+  let capturando = false;
+  
+  for(let i=0; i<lines.length; i++){
+    const line = lines[i].trim();
+    
+    // Detectar inicio de sección "Pilares de marca"
+    if(/^##\s+Pilares de marca/i.test(line)){
+      capturando = true;
+      continue;
+    }
+    
+    // Detectar fin de sección (nuevo ##)
+    if(capturando && /^##\s+/.test(line)){
+      break;
+    }
+    
+    // Capturar pilares (líneas con - o números)
+    if(capturando && (line.startsWith('-') || line.startsWith('•') || /^\d+\./.test(line))){
+      let pilar = line.replace(/^[-•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
+      // Remover texto después de dos puntos o paréntesis
+      pilar = pilar.split(':')[0].split('(')[0].trim();
+      if(pilar.length > 0 && pilar.length < 60){
+        pilares.push(pilar);
+      }
+    }
+  }
+  
+  return pilares.length > 0 ? pilares : ['Pilar 1', 'Pilar 2', 'Pilar 3'];
+}
+
+/* Renderizar chips de pilares (Tab 2) */
+function renderChipsPilares(){
+  const c = document.getElementById('chipsPilares');
+  if(!c) return;
+  c.innerHTML = '';
+  
+  if(extractedPilares.length === 0){
+    c.innerHTML = '<div class="hint">Primero genera la estrategia en el Tab 1</div>';
+    return;
+  }
+  
+  extractedPilares.forEach(p=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (selectedPilar===p?' active':'');
+    b.textContent = p;
+    b.onclick = ()=>selectPilar(p);
+    c.appendChild(b);
+  });
+}
+
+function selectPilar(p){
+  selectedPilar = p;
+  if(!pilarChats[p]) pilarChats[p]=[];
+  renderChipsPilares();
+  
+  // Generar ideas automáticamente
+  generarIdeasPilar();
+}
+
+/* Upload */
+document.getElementById('file').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  const fileNameEl = document.getElementById('fileName');
+  if (!f) { fileNameEl.textContent=''; return; }
+  const r = new FileReader();
+  r.onload = () => fileDataUrl = r.result;
+  r.readAsDataURL(f);
+  fileNameEl.textContent = f.name;
+});
+
+const audienceInput = document.getElementById('audience-core-files');
+if(audienceInput){
+  audienceInput.addEventListener('change', handleAudienceCoreUpload);
+}
+renderAudienceCoreFileList();
+
+function handleAudienceCoreUpload(e){
+  const files = Array.from(e.target.files || []);
+  if(!files.length){
+    audienceCoreFiles = [];
+    renderAudienceCoreFileList();
+    return;
+  }
+
+  Promise.all(files.map(readFileAsDataUrl))
+    .then(results=>{
+      audienceCoreFiles = results;
+      renderAudienceCoreFileList();
+    })
+    .catch(err=>{
+      console.error('Error al procesar archivos de Audience Core:', err);
+      alert('No se pudieron procesar algunos archivos. Intenta nuevamente.');
+      audienceCoreFiles = [];
+      renderAudienceCoreFileList();
+    });
+}
+
+function readFileAsDataUrl(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve({
+      name: file.name,
+      size: file.size,
+      type: file.type || 'application/octet-stream',
+      dataUrl: reader.result
+    });
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderAudienceCoreFileList(){
+  const list = document.getElementById('audienceCoreFileList');
+  const hint = document.getElementById('audienceCoreFileHint');
+  if(!list || !hint) return;
+
+  if(!audienceCoreFiles.length){
+    list.innerHTML = '<div class="empty-state">No has agregado archivos todavía.</div>';
+    hint.textContent = 'No hay archivos seleccionados.';
+    return;
+  }
+
+  list.innerHTML = audienceCoreFiles.map((f, idx)=>`
+    <div class="audience-file">
+      <div class="meta">
+        <div class="name">${escapeHtml(f.name)}</div>
+        <div class="details">${escapeHtml(f.type || 'application/octet-stream')} • ${formatBytes(f.size)}</div>
+      </div>
+      <button type="button" class="btn secondary btn-sm" onclick="removeAudienceCoreFile(${idx})">Eliminar</button>
+    </div>
+  `).join('');
+
+  hint.textContent = audienceCoreFiles.length === 1
+    ? '1 archivo listo para usar.'
+    : `${audienceCoreFiles.length} archivos listos para usar.`;
+}
+
+function removeAudienceCoreFile(index){
+  audienceCoreFiles.splice(index, 1);
+  const input = document.getElementById('audience-core-files');
+  if(input && audienceCoreFiles.length === 0){
+    input.value = '';
+  }
+  renderAudienceCoreFileList();
+}
+
+function formatBytes(bytes){
+  if(!bytes && bytes !== 0) return '0 B';
+  const units = ['B','KB','MB','GB','TB'];
+  const i = bytes === 0 ? 0 : Math.floor(Math.log(bytes)/Math.log(1024));
+  const value = bytes / Math.pow(1024, i);
+  return `${value.toFixed(value >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+/* Generación (Tab 1) */
+function generar(){
+  if (!fileDataUrl) { alert('Sube un archivo primero.'); return; }
+  const f = document.getElementById('file').files[0];
+  const input = { name: f.name, mimeType: f.type || 'application/octet-stream', dataUrlBase64: fileDataUrl };
+
+  setResult('result','Procesando…');
+  google.script.run.withSuccessHandler(res => {
+    lastBrief = res.brief || '';
+    setResult('result', lastBrief ? renderSimpleMarkdown(lastBrief) : 'No se obtuvo respuesta.');
+    if(!selectedSection) selectSection(SECTIONS[0]);
+    
+    // Extraer pilares
+    extractedPilares = extractPilaresFromBrief(lastBrief);
+    renderChipsPilares();
+  }).withFailureHandler(err => setResult('result','Error: ' + err.message))
+    .uploadAndGenerateBrief(input, "");
+}
+
+function limpiar(){
+  document.getElementById('file').value = '';
+  fileDataUrl = null; lastBrief = '';
+  audienceCoreFiles = [];
+  const audienceInputEl = document.getElementById('audience-core-files');
+  if(audienceInputEl) audienceInputEl.value = '';
+  renderAudienceCoreFileList();
+  document.getElementById('fileName').textContent = '';
+  document.getElementById('result').textContent = 'Aquí aparecerá la estrategia generada…';
+  document.getElementById('resultIdeas').textContent = 'Selecciona un pilar de contenido y genera ideas creativas…';
+  chats = {}; selectedSection = null; renderChips();
+
+  /* Reset pilares */
+  selectedPilar = null;
+  lastPilarIdeas = '';
+  pilarChats = {};
+  extractedPilares = [];
+  document.getElementById('estrategiaFinal').value = '';
+  document.getElementById('chatLogPilar').innerHTML = '';
+  document.getElementById('chatPilarHint').textContent = 'Conversa para modificar y refinar las ideas creativas';
+  renderChipsPilares();
+}
+
+/* Chat (Tab 1) */
+function renderChat(arr){
+  return arr.map(m=>`<div class="msg ${m.role==='user'?'user':'assistant'}">${escapeHtml(m.content)}</div>`).join('');
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+function sendChat(){
+  if(!lastBrief){ alert('Genera primero la estrategia.'); return; }
+  if(!selectedSection){ alert('Elige una sección.'); return; }
+
+  const input = document.getElementById('chatText');
+  const txt = (input.value || '').trim();
+  if(!txt) return;
+
+  chats[selectedSection] = chats[selectedSection] || [];
+  chats[selectedSection].push({role:'user', content:txt});
+  document.getElementById('chatLog').innerHTML = renderChat(chats[selectedSection]);
+  input.value = '';
+
+  google.script.run
+    .withSuccessHandler(reply => {
+      chats[selectedSection].push({role:'assistant', content:reply});
+      document.getElementById('chatLog').innerHTML = renderChat(chats[selectedSection]);
+      document.getElementById('chatLog').scrollTop = 1e9;
+    })
+    .withFailureHandler(e=>{
+      chats[selectedSection].push({role:'assistant', content:'[Error] '+e.message});
+      document.getElementById('chatLog').innerHTML = renderChat(chats[selectedSection]);
+    })
+    .chatSectionTurn(selectedSection, chats[selectedSection], lastBrief);
+}
+
+/* Aplicar cambios (Tab 1) */
+function actualizarBrief(){
+  if(!lastBrief){ alert('Genera primero la estrategia.'); return; }
+  if(!selectedSection){ alert('Elige una sección.'); return; }
+  setResult('result','Actualizando brief con los cambios…');
+  google.script.run.withSuccessHandler(md => {
+    lastBrief = md;
+    setResult('result', renderSimpleMarkdown(md));
+    
+    // Actualizar pilares
+    extractedPilares = extractPilaresFromBrief(md);
+    renderChipsPilares();
+  }).withFailureHandler(e=>{
+    setResult('result', 'Error al actualizar: '+e.message);
+  }).applySectionChanges(selectedSection, chats[selectedSection]||[], lastBrief);
+}
+
+/* Helpers */
+function setTab(which){
+  document.getElementById('tab-estrategia').classList.toggle('active', which==='estrategia');
+  document.getElementById('tab-ideas').classList.toggle('active', which==='ideas');
+  document.getElementById('view-estrategia').classList.toggle('hidden', which!=='estrategia');
+  document.getElementById('view-ideas').classList.toggle('hidden', which!=='ideas');
+}
+function setResult(id, html){ document.getElementById(id).innerHTML = html; }
+
+function renderSimpleMarkdown(md){
+  let html = md
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+    .replace(/^\- (.*)$/gm, '<li>$1</li>')
+    .replace(/\n{3,}/g, '\n\n');
+  html = html.replace(/(?:\s*<li>.*<\/li>\s*)+/gs, m => `<ul>${m}</ul>`);
+  return html;
+}
+
+function llevarAEstrategiaFinal(){
+  setTab('ideas');
+  document.getElementById('estrategiaFinal').value = lastBrief || '';
+  
+  // Extraer pilares
+  extractedPilares = extractPilaresFromBrief(lastBrief);
+  renderChipsPilares();
+}
+function pegarUltimaEstrategia(){ 
+  document.getElementById('estrategiaFinal').value = lastBrief || ''; 
+  extractedPilares = extractPilaresFromBrief(lastBrief);
+  renderChipsPilares();
+}
+
+/* Limpiar markdown del output */
+function cleanMarkdownOutput(text){
+  if (!text) return text;
+  return text
+    .replace(/```markdown\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
+}
+
+/* ===== Ideas Creativas por Pilar (Tab 2) ===== */
+function generarIdeasPilar(){
+  const estr = document.getElementById('estrategiaFinal').value.trim();
+  
+  if (!estr) { alert('Pega la estrategia final o usa la última generada.'); return; }
+  if (!selectedPilar) { alert('Selecciona un pilar de contenido.'); return; }
+  
+  if(!pilarChats[selectedPilar]) pilarChats[selectedPilar] = [];
+  
+  setResult('resultIdeas','Generando ideas creativas para: ' + selectedPilar + '…');
+  document.getElementById('chatPilarHint').textContent = 'Refinando ideas para: ' + selectedPilar;
+  document.getElementById('chatLogPilar').innerHTML = '';
+  
+  google.script.run
+    .withSuccessHandler(briefMd => {
+      const cleaned = cleanMarkdownOutput(briefMd);
+      lastPilarIdeas = cleaned;
+      setResult('resultIdeas', renderSimpleMarkdown(cleaned));
+    })
+    .withFailureHandler(e => {
+      setResult('resultIdeas','Error: ' + e.message);
+    })
+    .generateCreativeIdeas(estr, selectedPilar);
+}
+
+/* Chat para ajustar ideas del pilar */
+function sendPilarChat(){
+  if(!lastPilarIdeas){ alert('Genera primero las ideas del pilar.'); return; }
+  if(!selectedPilar){ alert('Selecciona un pilar.'); return; }
+
+  const input = document.getElementById('chatTextPilar');
+  const txt = (input.value || '').trim();
+  if(!txt) return;
+
+  pilarChats[selectedPilar] = pilarChats[selectedPilar] || [];
+  pilarChats[selectedPilar].push({role:'user', content:txt});
+  document.getElementById('chatLogPilar').innerHTML = renderChat(pilarChats[selectedPilar]);
+  input.value = '';
+
+  google.script.run
+    .withSuccessHandler(reply => {
+      const cleaned = cleanMarkdownOutput(reply);
+      pilarChats[selectedPilar].push({role:'assistant', content:cleaned});
+      document.getElementById('chatLogPilar').innerHTML = renderChat(pilarChats[selectedPilar]);
+      document.getElementById('chatLogPilar').scrollTop = 1e9;
+    })
+    .withFailureHandler(e=>{
+      pilarChats[selectedPilar].push({role:'assistant', content:'[Error] '+e.message});
+      document.getElementById('chatLogPilar').innerHTML = renderChat(pilarChats[selectedPilar]);
+    })
+    .chatPillarTurn(selectedPilar, pilarChats[selectedPilar], lastPilarIdeas);
+}
+
+/* Actualizar ideas del pilar con los cambios del chat */
+function actualizarIdeasPilar(){
+  if(!lastPilarIdeas){ alert('Genera primero las ideas del pilar.'); return; }
+  if(!selectedPilar){ alert('Selecciona un pilar.'); return; }
+
+  const hist = pilarChats[selectedPilar] || [];
+  if(!hist.length){
+    alert('No hay conversación. Envía un mensaje primero con los cambios que deseas.'); return;
+  }
+
+  setResult('resultIdeas','Actualizando ideas con los cambios…');
+  
+  const estr = document.getElementById('estrategiaFinal').value.trim();
+  
+  google.script.run
+    .withSuccessHandler(md => {
+      const cleaned = cleanMarkdownOutput(md);
+      lastPilarIdeas = cleaned;
+      setResult('resultIdeas', renderSimpleMarkdown(cleaned));
+    })
+    .withFailureHandler(e=>{
+      setResult('resultIdeas', 'Error al actualizar: '+e.message);
+    })
+    .applyPillarChanges(selectedPilar, hist, lastPilarIdeas, estr);
+}
+
+/* ========= Descargar panel como PDF ========= */
+function downloadPanelAsPDF(panelId, title){
+  try{
+    const el = document.getElementById(panelId);
+    if(!el){ alert('No se encontró el contenido a exportar.'); return; }
+
+    const styles = Array.from(document.querySelectorAll('style')).map(s => s.innerHTML).join('\n');
+    const now = new Date().toLocaleString('es-MX', { hour12:false });
+
+    const win = window.open('', '_blank', 'width=900,height=1200');
+    win.document.write(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    ${styles}
+    @page { margin: 20mm; }
+    html, body { height: auto !important; overflow: visible !important; }
+    #${panelId} { height: auto !important; max-height: none !important; overflow: visible !important; white-space: pre-wrap !important; }
+    #${panelId} *, .container, .card {
+      max-height: none !important; overflow: visible !important; break-inside: auto !important; page-break-inside: auto !important;
+    }
+    body { background: #fff; padding: 0; }
+    header#print-header{
+      display:flex;justify-content:space-between;align-items:center;
+      font:16px/1.4 Inter,system-ui,Segoe UI,Roboto,sans-serif;
+      margin:0 0 16px 0; padding:0 0 8px 0; border-bottom:1px solid #ddd;
+    }
+    header#print-header .title{ font-weight:900; font-size:20px; }
+    h1, h2, h3 { page-break-after: avoid; break-after: avoid-page; }
+    p, li { page-break-inside: auto; break-inside: auto; }
+    .card{ border:none !important; box-shadow:none !important; padding:0 !important; }
+    a{ color: inherit; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header id="print-header">
+    <div class="title">${title}</div>
+    <div style="font-size:12px;opacity:.7">${now}</div>
+  </header>
+  ${el.outerHTML}
+</body>
+</html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(function(){ win.print(); win.close(); }, 350);
+  } catch(e){
+    alert('No se pudo preparar el PDF: ' + (e && e.message ? e.message : e));
+  }
+}
+</script>
+</body>
+</html>
